@@ -42,6 +42,27 @@ class Ruby2Brat < Ruby2Ruby
 		"#{target}.#{method}(#{args})"
 	end
 
+	def process_class sexp
+		parent = process sexp.delete_at 1
+
+		module_name = sexp[0].to_s
+		@current_scope << module_name
+
+		module_name = current_object
+
+		output = "#{module_name} = object.new\n" << process(sexp[1])
+
+		@current_scope.pop
+
+		if parent
+			output << "#{module_name}.parent = #{current_object}.#{parent}\n"
+		end
+
+		sexp.clear
+
+		output
+	end
+
 	def process_defn sexp
 		method_name = sexp[0].to_s
 		args = process sexp[1]
