@@ -3,6 +3,8 @@ require "ruby_parser"
 require "ruby2ruby"
 
 class Ruby2Brat < Ruby2Ruby
+	REPLACE = { :puts => :p, :initialize => :init }
+
 	def initialize *args
 		super
 		self.auto_shift_type = true
@@ -31,7 +33,7 @@ class Ruby2Brat < Ruby2Ruby
 
 	def process_call sexp
 		target = process(sexp[0]) || current_object
-		method = sexp[1]
+		method = REPLACE[sexp[1]] || sexp[1]
 		args = process sexp[2]
 
 		sexp.clear
