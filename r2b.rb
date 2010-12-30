@@ -68,6 +68,10 @@ class Ruby2Brat < Ruby2Ruby
 		args = process sexp[1]
 		body = process sexp[2]
 
+		if method_name == "initialize"
+			method_name = "init"
+		end
+
 		sexp.clear
 
 		"#{current_object}.#{method_name} = { #{args} |	#{body} }"
