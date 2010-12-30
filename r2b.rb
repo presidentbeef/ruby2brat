@@ -9,6 +9,7 @@ class Ruby2Brat < Ruby2Ruby
 		super
 		self.auto_shift_type = true
 		self.expected = String
+		self.require_empty = false
 		@current_scope = ['my']
 	end
 
