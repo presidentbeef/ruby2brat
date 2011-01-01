@@ -93,6 +93,42 @@ class Ruby2Brat < Ruby2Ruby
 			BRAT
 	end
 
+	def process_iasgn sexp
+		lhs = "my.#{sexp[0].to_s[1..-1]}"
+		rhs = process sexp[1]
+
+		"#{lhs} = #{rhs}"
+	end
+
+	def process_iter sexp
+		block_args = []
+
+		if sexp[1]
+			case sexp[1][0]
+			when :lasgn
+				block_args << sexp[1][1]
+			when :masgn
+				sexp[1].shift #remove type
+				sexp[1].each do |v|
+					block_args << v[1]
+				end
+			else
+				warn "Unexpected type in block: #{sexp[1].inspect}"
+			end
+		end
+
+		sexp[0][3] << Sexp.new(:brat_block, "{ #{block_args.join(', ')} #{'|' unless block_args.empty? } #{process sexp[2] || ''}}")
+		process sexp[0]
+	end
+
+	def process_ivar sexp
+		"my.#{sexp[0].to_s[1..-1]}"
+	end
+
+	def process_brat_block sexp
+		sexp[0]
+	end
+
 	def process_lasgn sexp
 		lhs = sexp[0]
 		rhs = process sexp[1]
@@ -137,7 +173,7 @@ class Ruby2Brat < Ruby2Ruby
 	def process_scope sexp
 		output = sexp.map do |s|
 			process s
-		end.join "\n"
+		end.join("\n") << "\n"
 
 		sexp.clear
 
