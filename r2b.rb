@@ -119,8 +119,9 @@ class Ruby2Brat < Ruby2Ruby
 		module_name = sexp[0].to_s
 		@current_scope << module_name
 
+		output = "#{current_object} = object.new\n" << process(sexp[1])
 
-		output = "#{module_name} = object.new\n" << process(sexp[1])
+		@current_scope.pop
 
 		sexp.clear
 
