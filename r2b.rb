@@ -1,3 +1,4 @@
+#!/usr/bin/env ruby
 require "rubygems"
 require "ruby_parser"
 require "ruby2ruby"
