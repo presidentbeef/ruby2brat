@@ -74,7 +74,9 @@ class Ruby2Brat < Ruby2Ruby
 
 		sexp.clear
 
-		"#{current_object}.#{method_name} = { #{args} |	#{body} }"
+		args << " |" unless args.empty?
+
+		"#{current_object}.#{method_name} = { #{args} \n	#{body} }"
 	end
 
 	def process_if sexp
