@@ -6,7 +6,9 @@ require "ruby2ruby"
 class Ruby2Brat < Ruby2Ruby
   REPLACE = { :puts => :p,
     :initialize => :init,
-    :inject => :reduce
+    :inject => :reduce,
+    :[] => :get,
+    :[]= => :set
   }
 
   def initialize *args
