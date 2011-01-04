@@ -4,186 +4,206 @@ require "ruby_parser"
 require "ruby2ruby"
 
 class Ruby2Brat < Ruby2Ruby
-	REPLACE = { :puts => :p, :initialize => :init }
+  REPLACE = { :puts => :p, :initialize => :init }
 
-	def initialize *args
-		super
-		self.auto_shift_type = true
-		self.expected = String
-		self.require_empty = false
-		@current_scope = ['my']
-	end
+  def initialize *args
+    super
+    self.auto_shift_type = true
+    self.expected = String
+    self.require_empty = false
+    @current_scope = ['my']
+  end
 
-	def current_object
-		@current_scope.join '.'
-	end
+  def current_object
+    @current_scope.join '.'
+  end
 
-	def process_args sexp
-		output = sexp.map do |s|
-			if s.is_a? Sexp
-			else
-				s.to_s
-			end
-		end.join ' ,'
-		sexp.clear
-		output
-	end
+  def process_args(exp)
+    #Borrowed from ruby2ruby
+    args = []
 
-	def process_block sexp
-		process_scope sexp
-	end
+    until exp.empty? do
+      arg = exp.shift
+      case arg
+      when Symbol, String
+        args << arg
+      when Array
+        case arg.first
+        when :block
+          asgns = {}
+          arg[1..-1].each do |lasgn|
+            asgns[lasgn[1]] = process(lasgn)
+          end
 
-	def process_call sexp
-		target = process(sexp[0]) || current_object
-		method = REPLACE[sexp[1]] || sexp[1]
-		args = process sexp[2]
+          args.each_with_index do |name, index|
+            args[index] = asgns[name] if asgns.has_key? name
+          end
+        else
+          raise "unknown arg type #{arg.first.inspect}"
+        end
+      else
+        raise "unknown arg type #{arg.inspect}"
+      end
+    end
 
-		sexp.clear
+    return args.join ', '
+  end
 
-		"#{target}.#{method}(#{args})"
-	end
+  def process_block sexp
+    process_scope sexp
+  end
 
-	def process_class sexp
-		parent = process sexp.delete_at 1
+  def process_call sexp
+    target = process(sexp[0]) || current_object
+    method = REPLACE[sexp[1]] || sexp[1]
+    args = process sexp[2]
 
-		module_name = sexp[0].to_s
-		@current_scope << module_name
+    sexp.clear
 
-		module_name = current_object
+    "#{target}.#{method}(#{args})"
+  end
 
-		output = "#{module_name} = object.new\n" << process(sexp[1])
+  def process_class sexp
+    parent = process sexp.delete_at 1
 
-		@current_scope.pop
+    module_name = sexp[0].to_s
+    @current_scope << module_name
 
-		if parent
-			output << "#{module_name}.parent = #{current_object}.#{parent}\n"
-		end
+    module_name = current_object
 
-		sexp.clear
+    output = "#{module_name} = object.new\n" << process(sexp[1])
 
-		output
-	end
+    @current_scope.pop
 
-	def process_defn sexp
-		method_name = sexp[0].to_s
-		args = process sexp[1]
-		body = process sexp[2]
+    if parent
+      output << "#{module_name}.parent = #{current_object}.#{parent}\n"
+    end
 
-		if method_name == "initialize"
-			method_name = "init"
-		end
+    sexp.clear
 
-		sexp.clear
+    output
+  end
 
-		args << " |" unless args.empty?
+  def process_defn sexp
+    method_name = sexp[0].to_s
+    args = process sexp[1]
+    body = process sexp[2]
 
-		"#{current_object}.#{method_name} = { #{args} \n	#{body} }"
-	end
+    if method_name == "initialize"
+      method_name = "init"
+    end
 
-	def process_if sexp
-		condition = process sexp[0]
-		true_action = process sexp[1]
-		false_action = process sexp[2]
+    sexp.clear
 
-		sexp.clear
+    args << " |" unless args.empty?
 
-		<<-BRAT
-		true? { #{condition} },
-			{ #{true_action} },
-			{ #{false_action} }
-			BRAT
-	end
+    "#{current_object}.#{method_name} = { #{args} \n	#{body} }"
+  end
 
-	def process_iasgn sexp
-		lhs = "my.#{sexp[0].to_s[1..-1]}"
-		rhs = process sexp[1]
+  def process_if sexp
+    condition = process sexp[0]
+    true_action = process sexp[1]
+    false_action = process sexp[2]
 
-		"#{lhs} = #{rhs}"
-	end
+    sexp.clear
 
-	def process_iter sexp
-		block_args = []
+    <<-BRAT
+    true? { #{condition} },
+    { #{true_action} },
+    { #{false_action} }
+      BRAT
+  end
 
-		if sexp[1]
-			case sexp[1][0]
-			when :lasgn
-				block_args << sexp[1][1]
-			when :masgn
-				sexp[1].shift #remove type
-				sexp[1].each do |v|
-					block_args << v[1]
-				end
-			else
-				warn "Unexpected type in block: #{sexp[1].inspect}"
-			end
-		end
+  def process_iasgn sexp
+    lhs = "my.#{sexp[0].to_s[1..-1]}"
+    rhs = process sexp[1]
 
-		sexp[0][3] << Sexp.new(:brat_block, "{ #{block_args.join(', ')} #{'|' unless block_args.empty? } #{process sexp[2] || ''}}")
-		process sexp[0]
-	end
+    "#{lhs} = #{rhs}"
+  end
 
-	def process_ivar sexp
-		"my.#{sexp[0].to_s[1..-1]}"
-	end
+  def process_iter sexp
+    block_args = []
 
-	def process_brat_block sexp
-		sexp[0]
-	end
+    if sexp[1]
+      case sexp[1][0]
+      when :lasgn
+        block_args << sexp[1][1]
+      when :masgn
+        sexp[1].shift #remove type
+        sexp[1].each do |v|
+          block_args << v[1]
+        end
+      else
+        warn "Unexpected type in block: #{sexp[1].inspect}"
+      end
+    end
 
-	def process_lasgn sexp
-		lhs = sexp[0]
-		rhs = process sexp[1]
-		sexp.clear
+    sexp[0][3] << Sexp.new(:brat_block, "{ #{block_args.join(', ')} #{'|' unless block_args.empty? } #{process sexp[2] || ''}}")
+    process sexp[0]
+  end
 
-		"#{lhs} = #{rhs}"
-	end
+  def process_ivar sexp
+    "my.#{sexp[0].to_s[1..-1]}"
+  end
 
-	def process_lit sexp
-		output = "#{sexp[0].inspect}"
-		sexp.clear
-		output
-	end
+  def process_brat_block sexp
+    sexp[0]
+  end
 
-	def process_lvar sexp
-		output = sexp[0].to_s
+  def process_lasgn sexp
+    lhs = sexp[0]
+    rhs = process sexp[1]
+    sexp.clear
 
-		sexp.clear
+    "#{lhs} = #{rhs}"
+  end
 
-		output
-	end
+  def process_lit sexp
+    output = "#{sexp[0].inspect}"
+    sexp.clear
+    output
+  end
 
-	def process_module sexp
-		module_name = sexp[0].to_s
-		@current_scope << module_name
+  def process_lvar sexp
+    output = sexp[0].to_s
 
-		output = "#{current_object} = object.new\n" << process(sexp[1])
+    sexp.clear
 
-		@current_scope.pop
+    output
+  end
 
-		sexp.clear
+  def process_module sexp
+    module_name = sexp[0].to_s
+    @current_scope << module_name
 
-		output
-	end
+    output = "#{current_object} = object.new\n" << process(sexp[1])
 
-	def process_nil sexp
-		"null"
-	end
+    @current_scope.pop
 
-	def process_return sexp
-		value = sexp[0]
-		sexp.clear
-		process value 
-	end
+    sexp.clear
 
-	def process_scope sexp
-		output = sexp.map do |s|
-			process s
-		end.join("\n") << "\n"
+    output
+  end
 
-		sexp.clear
+  def process_nil sexp
+    "null"
+  end
 
-		output
-	end
+  def process_return sexp
+    value = sexp[0]
+    sexp.clear
+    process value 
+  end
+
+  def process_scope sexp
+    output = sexp.map do |s|
+      process s
+    end.join("\n") << "\n"
+
+    sexp.clear
+
+    output
+  end
 end
 
 #Test
