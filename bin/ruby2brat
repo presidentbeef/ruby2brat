@@ -177,9 +177,11 @@ class Ruby2Brat < Ruby2Ruby
   end
 
   def process_lit sexp
-    output = "#{sexp[0].inspect}"
-    sexp.clear
-    output
+    if sexp[0].is_a? Range
+      "#{sexp[0].begin}, #{sexp[0].end}"
+    else
+      "#{sexp[0].inspect}"
+    end
   end
 
   def process_lvar sexp
