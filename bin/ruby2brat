@@ -132,8 +132,8 @@ class Ruby2Brat < Ruby2Ruby
       when :lasgn
         block_args << sexp[1][1]
       when :masgn
-        sexp[1].shift #remove type
-        sexp[1].each do |v|
+        sexp[1][1].shift
+        sexp[1][1].each do |v|
           block_args << v[1]
         end
       else
