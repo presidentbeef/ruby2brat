@@ -105,6 +105,10 @@ class Ruby2BratTests < Test::Unit::TestCase
     RUBY
   end
 
+	def test_null
+		assert_result "null", "nil"
+	end
+
   def test_simple_string_interpolation
     assert_result "hello world", '"hello #{"world"}"'
   end
