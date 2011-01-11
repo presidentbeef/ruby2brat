@@ -67,6 +67,15 @@ class Ruby2BratTests < Test::Unit::TestCase
     RUBY
   end
 
+	def test_early_return
+		assert_result "true", "a_method", <<-RUBY
+		def a_method
+			return true
+			false
+		end
+		RUBY
+	end
+
   def test_here_document
     assert_result "    Twinkle, twinkle", "poem.split('\n').first", <<-RUBY
     poem = <<-POEM
@@ -105,8 +114,30 @@ class Ruby2BratTests < Test::Unit::TestCase
     RUBY
   end
 
+	def test_multiple_returns
+		assert_result "true", "a_method false", <<-RUBY
+		def a_method cond
+			if not cond
+				return true
+			else
+				return false
+			end
+
+			return 6
+		end
+		RUBY
+	end
+
 	def test_null
 		assert_result "null", "nil"
+	end
+
+	def test_simple_return
+		assert_result "a method", "a_method", <<-RUBY
+		def a_method
+			return "a method"
+		end
+		RUBY
 	end
 
   def test_simple_string_interpolation
@@ -138,4 +169,14 @@ class Ruby2BratTests < Test::Unit::TestCase
   def test_string
     assert_result "hi", "'hi'"
   end
+
+	def test_unused_return
+		assert_result "true", "a_method", <<-RUBY
+		def a_method
+			return 6 if false
+
+			true	
+		end
+		RUBY
+	end
 end
