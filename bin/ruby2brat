@@ -23,6 +23,13 @@ class Ruby2Brat < Ruby2Ruby
     @current_scope.join '.'
   end
 
+  def process_and sexp
+    rhs = process sexp[0]
+    lhs = process sexp[1]
+
+    "(#{rhs}).&&({#{lhs}})"
+  end
+
   def process_args(exp)
     #Borrowed from ruby2ruby
     args = []

@@ -43,6 +43,25 @@ class Ruby2BratTests < Test::Unit::TestCase
     assert_equal expected, result
   end
 
+	def test_and_chained
+		assert_result "true", "1 and true and 1 == 1"
+	end
+
+	def test_and_in_if
+		assert_result "1", "x", <<-RUBY
+		x = 0
+
+		if x and x = 1
+		end
+		RUBY
+	end
+
+	def test_and_simple
+		assert_result "false", "true and false"
+		assert_result "false", "nil and false"
+		assert_result "true", "true and 1"
+	end
+
   def test_array_access
     assert_result "3", "a = [1,2,3]; a[2]"
     assert_result "3", "a = [1,2,3]; b = [a]; b[0][2]"
