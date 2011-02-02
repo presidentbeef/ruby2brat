@@ -53,6 +53,14 @@ class Ruby2BratTests < Test::Unit::TestCase
     assert_result "3", "a = [:a, :b, :c]; a[2] = 3; a[2]"
   end
 
+	def test_class_constant
+		assert_result "100", "A::CONSTANT", <<-RUBY
+		class A
+			CONSTANT = 100
+		end
+		RUBY
+	end
+
 	def test_class_variables
 		assert_result "1", "B.new.something", <<-RUBY
 		class A
@@ -66,6 +74,13 @@ class Ruby2BratTests < Test::Unit::TestCase
 		end
 		RUBY
 	end
+
+	def test_constant
+		assert_result "100", "CONSTANT", <<-RUBY
+		CONSTANT = 100
+		RUBY
+	end
+
   def test_default_args
     assert_result "3", "hello 1, 2", <<-RUBY
     def hello x, y, z = 3

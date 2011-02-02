@@ -72,6 +72,22 @@ class Ruby2Brat < Ruby2Ruby
     end
   end
 
+  def process_cdecl sexp
+    if @inside_class
+      const = sexp[0]
+
+      const = process(const) if sexp? const
+
+      if @inside_method
+        "my.#{sexp[0]} = #{process sexp[1]}"
+      else
+        "#{current_object}.#{sexp[0]} = #{process sexp[1]}"
+      end
+    else
+      super sexp
+    end
+  end
+
   def process_class sexp
     parent = process sexp.delete_at 1
 
@@ -98,6 +114,10 @@ class Ruby2Brat < Ruby2Ruby
     sexp.clear
 
     output
+  end
+
+  def process_colon2 sexp
+    "#{process sexp[0]}.#{sexp[1]}"
   end
 
   def process_cvar sexp
