@@ -53,6 +53,19 @@ class Ruby2BratTests < Test::Unit::TestCase
     assert_result "3", "a = [:a, :b, :c]; a[2] = 3; a[2]"
   end
 
+	def test_class_variables
+		assert_result "1", "B.new.something", <<-RUBY
+		class A
+			@@test = 1
+		end
+	
+		class B < A
+			def something
+				@@test
+			end
+		end
+		RUBY
+	end
   def test_default_args
     assert_result "3", "hello 1, 2", <<-RUBY
     def hello x, y, z = 3

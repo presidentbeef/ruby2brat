@@ -77,11 +77,13 @@ class Ruby2Brat < Ruby2Ruby
 
     module_name = sexp[0].to_s
     @current_scope << module_name
+    @inside_class = true
 
     module_name = current_object
 
     output = "#{module_name} = object.new\n" << process(sexp[1])
 
+    @inside_class = false
     @current_scope.pop
 
     if parent
@@ -98,12 +100,29 @@ class Ruby2Brat < Ruby2Ruby
     output
   end
 
+  def process_cvar sexp
+    name = sexp[0].to_s[2..-1]
+
+    if @inside_class
+      "#{current_object}.#{name}"
+    else
+      "#{current_object}.parent.#{name}"
+    end
+  end
+  def process_cvdecl sexp
+    name = sexp[0].to_s[2..-1]
+    rhs = "{ #{process sexp[1]}}()"
+    "#{current_object}.#{name} = #{rhs}"
+  end
+
   def process_defn sexp
     method_name = sexp[0].to_s
     args = process sexp[1]
+    @inside_method = true
     body = protect_body process(sexp[2])
+    @inside_method = false
 
-		@return = false
+    @return = false
 
     if method_name == "initialize"
       method_name = "init"
@@ -150,11 +169,15 @@ class Ruby2Brat < Ruby2Ruby
     true? { #{condition} },
     { #{true_action} },
     { #{false_action} }
-      BRAT
+    BRAT
   end
 
   def process_iasgn sexp
-    lhs = "my.#{sexp[0].to_s[1..-1]}"
+    if @inside_method
+      lhs = "my.#{sexp[0].to_s[1..-1]}"
+    else
+      lhs = "#{current_object}.#{sexp[0].to_s[1..-1]}"
+    end
     rhs = process sexp[1]
 
     "#{lhs} = #{rhs}"
