@@ -160,6 +160,24 @@ class Ruby2BratTests < Test::Unit::TestCase
 		assert_result "null", "nil"
 	end
 
+	def test_or_chained
+		assert_result "true", "nil or false or true"
+	end
+
+	def test_or_in_if
+		assert_result "0", "x", <<-RUBY
+		x = 0
+
+		if x or (x = 1)
+		end
+		RUBY
+	end
+
+	def test_or_simple
+		assert_result "true", "true or false"
+		assert_result "false", "nil or false"
+	end
+
 	def test_simple_return
 		assert_result "a method", "a_method", <<-RUBY
 		def a_method

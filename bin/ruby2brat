@@ -129,6 +129,13 @@ class Ruby2Brat < Ruby2Ruby
       "#{current_object}.parent.#{name}"
     end
   end
+
+  def process_cvasgn sexp
+    name = sexp[0].to_s[2..-1]
+    rhs = "{ #{process sexp[1]}}()"
+    "my.#{name} = #{rhs}"
+  end
+
   def process_cvdecl sexp
     name = sexp[0].to_s[2..-1]
     rhs = "{ #{process sexp[1]}}()"
@@ -271,6 +278,13 @@ class Ruby2Brat < Ruby2Ruby
 
   def process_nil sexp
     "null"
+  end
+
+  def process_or sexp
+    rhs = process sexp[0]
+    lhs = process sexp[1]
+
+    "(#{rhs}).||({#{lhs}})"
   end
 
   def process_return sexp
