@@ -139,24 +139,24 @@ class Ruby2Brat < Ruby2Ruby
     end
   end
 
-	#Wraps body in a protect call which collects return values
-	#via exceptions.
-	def protect_body body
-		if @return
-			<<-BRAT
-			protect {
-				#{body}
-			}
-			rescue: { e |
-				true? e.type == :return
-					{ e.return_value }
-					{ throw e }
-			}
-			BRAT
-		else
-			body
-		end
-	end
+  #Wraps body in a protect call which collects return values
+  #via exceptions.
+  def protect_body body
+    if @return
+      <<-BRAT
+      protect {
+      #{body}
+      }
+      rescue: { e |
+        true? e.type == :return
+          { e.return_value }
+          { throw e }
+      }
+      BRAT
+    else
+      body
+    end
+  end
 
   def process_if sexp
     condition = process sexp[0]
@@ -254,19 +254,19 @@ class Ruby2Brat < Ruby2Ruby
   end
 
   def process_return sexp
-		@return = true
+    @return = true
     value = sexp[0]
     sexp.clear
 
-		<<-BRAT
-		return_value$ = {
-			#{process value}
-		}
+    <<-BRAT
+    return_value$ = {
+      #{process value}
+    }
 
-		e$ = exception.new("", :return)
-		e$.return_value = return_value$
-		throw(e$)
-		BRAT
+    e$ = exception.new("", :return)
+    e$.return_value = return_value$
+    throw(e$)
+    BRAT
   end
 
   def process_scope sexp
