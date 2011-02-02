@@ -278,6 +278,10 @@ class Ruby2Brat < Ruby2Ruby
 
     output
   end
+
+  def sexp? sexp
+    sexp.is_a? Sexp
+  end
 end
 
 #Test
