@@ -197,6 +197,15 @@ class Ruby2Brat < Ruby2Ruby
     end
   end
 
+  def process_hash sexp
+    out = []
+    0.step(sexp.length - 1, 2) do |i|
+      out << "#{process sexp[i]} : #{process sexp[i + 1]}"
+    end
+
+    "[" << out.join(', ') << "]"
+  end
+
   def process_if sexp
     condition = process sexp[0]
     true_action = process sexp[1]

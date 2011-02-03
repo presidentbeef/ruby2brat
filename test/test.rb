@@ -123,6 +123,10 @@ class Ruby2BratTests < Test::Unit::TestCase
 		RUBY
 	end
 
+	def test_hash
+		assert_result "a", "a = { 1 => 'a'}; a[1]"
+	end
+
   def test_here_document
     assert_result "    Twinkle, twinkle", "poem.split('\n').first", <<-RUBY
     poem = <<-POEM
