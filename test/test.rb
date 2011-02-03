@@ -161,6 +161,20 @@ class Ruby2BratTests < Test::Unit::TestCase
     RUBY
   end
 
+	def test_module_nested
+		assert_result "c", "A::B::C.new.test", <<-RUBY
+		module A
+			module B
+				class C
+					def test
+						"c"
+					end
+				end
+			end
+		end
+		RUBY
+	end
+
 	def test_multiple_returns
 		assert_result "true", "a_method false", <<-RUBY
 		def a_method cond

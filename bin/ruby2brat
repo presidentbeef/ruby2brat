@@ -98,7 +98,12 @@ class Ruby2Brat < Ruby2Ruby
   def process_class sexp
     parent = process sexp.delete_at 1
 
-    module_name = sexp[0].to_s
+    if sexp? sexp[0]
+      module_name = process sexp[0]
+    else
+      module_name = sexp[0].to_s
+    end
+
     @current_scope << module_name
     @inside_class = true
 
