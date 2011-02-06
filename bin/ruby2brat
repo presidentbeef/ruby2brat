@@ -67,7 +67,7 @@ class Ruby2Brat < Ruby2Ruby
 
   def process_call sexp
     target = process(sexp[0]) || current_object
-    method = REPLACE[sexp[1]] || sexp[1]
+    method = variable_name sexp[1]
     args = process sexp[2]
 
     sexp.clear
@@ -155,7 +155,7 @@ class Ruby2Brat < Ruby2Ruby
   end
 
   def process_defn sexp
-    method_name = sexp[0].to_s
+    method_name = variable_name sexp[0]
     args = process sexp[1]
     @inside_method = true
     body = protect_body process(sexp[2])
@@ -345,6 +345,14 @@ class Ruby2Brat < Ruby2Ruby
 
   def sexp? sexp
     sexp.is_a? Sexp
+  end
+
+  def variable_name name
+    name = (REPLACE[name] || name).to_s
+
+    name.gsub! /^_/, "a!_"
+
+    name
   end
 end
 

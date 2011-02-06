@@ -165,6 +165,14 @@ class Ruby2BratTests < Test::Unit::TestCase
     RUBY
   end
 
+	def test_method_name
+		assert_result "_method", "_method", <<-RUBY
+		def _method
+			"_method"
+		end
+		RUBY
+	end
+
 	def test_module_nested
 		assert_result "c", "A::B::C.new.test", <<-RUBY
 		module A
