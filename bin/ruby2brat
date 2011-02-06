@@ -301,6 +301,15 @@ class Ruby2Brat < Ruby2Ruby
     "null"
   end
 
+  def process_op_asgn_or sexp
+    lhs = process sexp[0]
+    rhs = process sexp[1][2]
+
+    <<-BRAT
+    #{lhs} = true?(protect({ #{lhs} } rescue: { false }), { #{lhs} }, { #{rhs} })
+    BRAT
+  end
+
   def process_or sexp
     rhs = process sexp[0]
     lhs = process sexp[1]

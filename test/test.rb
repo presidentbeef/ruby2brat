@@ -197,6 +197,18 @@ class Ruby2BratTests < Test::Unit::TestCase
 		assert_result "null", "nil"
 	end
 
+	def test_or_assign
+		assert_result "5", "x ||= 3", <<-RUBY
+		x = 5
+		RUBY
+
+		assert_result "3", "x ||= 3"
+
+		assert_result "3", "x", <<-RUBY
+		x ||= 3
+		RUBY
+	end
+
 	def test_or_chained
 		assert_result "true", "nil or false or true"
 	end
